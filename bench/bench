@@ -17,7 +17,7 @@ error ()
 {
   echo $1
   echo '
-Usage: bench [-r runs] [-c clean] [-i iterfile] [-s setting] [-o options] <scheme-systems> <benchmarks>
+Usage: bench [-r runs] [-c clean] [-i iterfile] [-s setting] [-o options] [-p prelude] <scheme-systems> <benchmarks>
 
 <scheme-systems> is the abbreviated name of one or more
 language implementations to use, i.e.:
@@ -547,6 +547,7 @@ while [ $# -gt 2 ] ; do
       -i) forceiters=$1 ; shift ;;
       -s) setting=$1    ; shift ;;
       -o) options=$1    ; shift ;;
+      -p) prelude=$1    ; shift ;;
        *) error ">>> Unknown argument of $arg given." ;;
    esac
 done
@@ -1125,6 +1126,8 @@ petite-chez) NAME='Petite-Chez-Scheme'
    esac
 
    if [ -n "$forceiters" ] ; then iterfile="$forceiters" ; fi
+
+   if [ -n "$prelude" ] ; then INSERTCODE="$INSERTCODE\n$prelude" ; fi
 
    if [ ! -e "sys" ]; then
        mkdir sys
