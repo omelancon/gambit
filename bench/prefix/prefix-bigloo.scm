@@ -56,6 +56,9 @@
  (define (call-with-output-file/truncate filename proc)
    (call-with-output-file filename proc))
 
+(define (unknown x)
+  ((car (list (lambda () x)))))
+
 (define (main-entry args)
   (main))
 

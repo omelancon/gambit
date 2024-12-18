@@ -548,6 +548,7 @@ while [ $# -gt 2 ] ; do
       -s) setting=$1    ; shift ;;
       -o) options=$1    ; shift ;;
       -p) prelude=$1    ; shift ;;
+      -q) postlude=$1   ; shift ;;
        *) error ">>> Unknown argument of $arg given." ;;
    esac
 done
@@ -1128,6 +1129,8 @@ petite-chez) NAME='Petite-Chez-Scheme'
    if [ -n "$forceiters" ] ; then iterfile="$forceiters" ; fi
 
    if [ -n "$prelude" ] ; then INSERTCODE="$INSERTCODE\n$prelude" ; fi
+
+   if [ -n "$postlude" ] ; then SUFFIXCODE="$SUFFIXCODE\n$postlude" ; fi
 
    if [ ! -e "sys" ]; then
        mkdir sys

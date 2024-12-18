@@ -27,6 +27,9 @@
  (define (call-with-output-file/truncate filename proc)
    (call-with-output-file filename proc))
 
+(define (unknown x)
+  (##first-argument x))
+
 ;------------------------------------------------------------------------------
 
 ; Macros...
