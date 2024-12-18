@@ -166,6 +166,7 @@
 (def-macro (bitwise-or . lst) `(bit-or ,@lst))
 (def-macro (bitwise-and . lst) `(bit-and ,@lst))
 (def-macro (bitwise-not . lst) `(bit-not ,@lst))
+(def-macro (arithmetic-shift x y) `(if (negativefx? y) (bit-rsh x (- y)) (bit-lsh x y)))
 )
 
 (begin
@@ -222,6 +223,9 @@
 (def-macro (bitwise-or . lst) `(bit-or ,@lst))
 (def-macro (bitwise-and . lst) `(bit-and ,@lst))
 (def-macro (bitwise-not . lst) `(bit-not ,@lst))
+(def-macro (arithmetic-shift x y)
+  `(let ((x ,x) (y ,y))
+    (if (negativefx? y) (bit-rsh x (- y)) (bit-lsh x y))))
 )
 )
 

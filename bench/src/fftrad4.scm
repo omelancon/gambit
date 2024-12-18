@@ -1670,7 +1670,7 @@
 		       lut-table-size^2
 		       n))
 	  (else
-	   (error "asking for too large a table")))))
+	   (error "asking for too large a table" 'make-w log-n)))))
 
 (define (direct-fft-recursive-4 a W-table)
 
