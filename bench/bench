@@ -377,7 +377,12 @@ chez_comp ()
 
 chez_exec ()
 {
-  printf "$REPLCOMMANDS" "$1" | scheme
+  if command -v perf
+  then
+    perf stat chezscheme -q $COMPOPTS $1.scm
+  else
+    /usr/bin/time chezscheme -q $COMPOPTS $1.scm
+  fi
 }
 
 # -----------------------------------------------------------------------------
@@ -775,14 +780,14 @@ ribbit-int) NAME='Ribbit-int'
                 EXEC=nonexistent_exec
                 ;;
               r6rs)
-                COMPOPTS="-O6 -copt -O3 -copt -fomit-frame-pointer"
+                COMPOPTS="-Obench -copt -O3 -copt -fomit-frame-pointer"
                 INSERTCODE="(define-macro (if-fixflo yes no) no)"
                 PREFIXCODE="; %s %s"
                 SUFFIXCODE="; %s %s"
                 REPLCOMMANDS=""
                 ;;
               r6rs-unsafe)
-                COMPOPTS="-Obench -copt -O3 -copt -fomit-frame-pointer"
+                COMPOPTS="-Obench -unsafe -copt -O3 -copt -fomit-frame-pointer"
                 INSERTCODE="(define-macro (if-fixflo yes no) no)"
                 PREFIXCODE="; %s %s"
                 SUFFIXCODE="; %s %s"
@@ -1002,7 +1007,7 @@ chicken-int) NAME='Chicken-int'
 
       chez) NAME='Chez-Scheme'
             COMP=chez_comp
-            COMPOPTS=""
+            COMPOPTS="--optimize-level 2"
             EXEC=chez_exec
             iterfile=num-iters.scm
             extension=".scm"
@@ -1010,6 +1015,19 @@ chicken-int) NAME='Chicken-int'
             PREFIXCODE="; %s %s"
             SUFFIXCODE="; %s %s"
             REPLCOMMANDS="(load \"%s.scm\")"
+            case "$setting" in
+              r6rs)
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                ;;
+              r6rs-unsafe)
+                INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
+                COMPOPTS="--optimize-level 3"
+                PREFIXCODE="; %s %s"
+                SUFFIXCODE="; %s %s"
+                ;;
+            esac
             ;;
 
 petite-chez) NAME='Petite-Chez-Scheme'
