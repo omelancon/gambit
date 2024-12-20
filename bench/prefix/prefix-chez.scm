@@ -25,7 +25,7 @@
     (exit 1))
 
 (define (call-with-output-file/truncate filename proc)
- (call-with-output-file filename proc))
+ (call-with-output-file filename proc 'truncate))
 
 (define (unknown r x)
     (call-with-values
