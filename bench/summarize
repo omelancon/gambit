@@ -127,12 +127,24 @@ runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
   }
 }
 
-runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
+runtime == 1 && /cpu time: ([0-9]+) real time: ([0-9]+)/ {
   if (cpu == "#f") {
-    cpu = $3;
+    cpu = $3/1000;
   }
   if (real == "#f") {
-    real = $6;
+    real = $6/1000;
+  }
+}
+
+runtime == 1 && /[ ]*([0-9.]+)s elapsed cpu time/ {
+  if (cpu == "#f") {
+    cpu = $1;
+  }
+}
+
+runtime == 1 && /[ ]*([0-9.]+)s elapsed real time/ {
+  if (real == "#f") {
+    real = $1;
   }
 }
 
