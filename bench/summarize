@@ -59,7 +59,7 @@ function output () {
       printf "%s)\n", gcount;
     }
     else {
-      printf "%d)\n", gctime, gccount;
+      printf "%d)\n", gccount;
     }
   }
 
@@ -165,28 +165,28 @@ runtime == 1 && /[ ]*([0-9.]+)s elapsed real time/ {
   }
 }
 
-runtime == 1 && /[ ]*([0-9]+) collections accounting for ([0-9.]+) secs/ {
-  if (gctime == "#f") {
-    gctime = $1;
-  }
+runtime == 1 && /[ ]*([0-9]+) collection(s)? accounting for ([0-9.]+) secs/ {
   if (gccount == "#f") {
-    gccount = $5;
+    gccount = $1;
   }
-}
-
-runtime == 1 && /real time, including ([0-9.]+)s collecting/ {
   if (gctime == "#f") {
-    gctime = $4;
+    gctime = $5;
   }
 }
 
-runtime == 1 && /^[ ]*([0-9]+) collections$/ {
+runtime == 1 && /^[ ]*([0-9.]+)s elapsed real time, including ([0-9.]+)s collecting/ {
+  if (gctime == "#f") {
+    gctime = $6;
+  }
+}
+
+runtime == 1 && /^[ ]*([0-9]+) collection(s)?/ {
   if (gccount == "#f") {
     gccount = $1;
   }
 }
 
-runtime == 1 && /^[ ]*no collections$/ {
+runtime == 1 && /^[ ]*no collection(s)?$/ {
   if (gccount == "#f") {
     gccount = 0;
   }
