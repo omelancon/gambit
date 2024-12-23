@@ -55,8 +55,8 @@ function output () {
       printf "%.6f ", gctime
     }
     
-    if (gcount == "#f") {
-      printf "%s)\n", gcount;
+    if (gccount == "#f") {
+      printf "%s)\n", gccount;
     }
     else {
       printf "%d)\n", gccount;
