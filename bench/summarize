@@ -3,6 +3,8 @@
 function clearvars () {
   real       = "#f";
   cpu        = "#f";
+  gctime     = "#f";
+  gccount    = "#f";
   codesize   = "#f";
   crashed    = 0;
   failed     = 0;
@@ -43,7 +45,22 @@ function output () {
     else {
       printf "%9.6f %9.6f ", real, cpu;
     }
-    printf "%9s %9s %9s %9s %6s)\n", cycles, instrs, branches, branchmisses, failure;
+
+    printf "%9s %9s %9s %9s %6s ", cycles, instrs, branches, branchmisses, failure;
+
+    if (gctime == "#f") {
+      printf "%s ", gctime;
+    }
+    else {
+      printf "%.6f ", gctime
+    }
+    
+    if (gccount == "#f") {
+      printf "%s)\n", gccount;
+    }
+    else {
+      printf "%d)\n", gccount;
+    }
   }
 
   clearvars();
@@ -127,12 +144,55 @@ runtime == 1 && /^[ ]*[0-9]+ ms real time$/ {
   }
 }
 
-runtime == 1 && /^cpu time: ([0-9]+) real time: ([0-9]+)/ {
+runtime == 1 && /cpu time: ([0-9]+) real time: ([0-9]+)/ {
   if (cpu == "#f") {
-    cpu = $3;
+    cpu = $3/1000;
   }
   if (real == "#f") {
-    real = $6;
+    real = $6/1000;
+  }
+}
+
+runtime == 1 && /[ ]*([0-9.]+)s elapsed cpu time/ {
+  if (cpu == "#f") {
+    cpu = $1;
+  }
+}
+
+runtime == 1 && /[ ]*([0-9.]+)s elapsed real time/ {
+  if (real == "#f") {
+    real = $1;
+  }
+}
+
+runtime == 1 && /[ ]*([0-9]+) collection(s)? accounting for ([0-9.]+) secs/ {
+  if (gccount == "#f") {
+    gccount = $1;
+  }
+  if (gctime == "#f") {
+    gctime = $5;
+  }
+}
+
+runtime == 1 && /^[ ]*([0-9.]+)s elapsed real time, including ([0-9.]+)s collecting/ {
+  if (gctime == "#f") {
+    gctime = $6;
+  }
+}
+
+runtime == 1 && /^[ ]*([0-9]+) collection(s)?/ {
+  if (gccount == "#f") {
+    gccount = $1;
+  }
+}
+
+runtime == 1 && /^[ ]*no collection(s)?$/ {
+  if (gccount == "#f") {
+    gccount = 0;
+  }
+
+  if (gctime == "#f") {
+    gctime = 0.0;
   }
 }
 

@@ -38,6 +38,33 @@
 
 ; Macros...
 
+(define __RESULT-BOX__ (cons #f '()))
+(define (boxify-tail size default)
+  (let ((filler (make-list size default)))
+    (set-cdr! __RESULT-BOX__ filler)
+    filler))
+
+(define-syntax BOXIFY
+(syntax-rules ()
+    ((_ op elem ...)
+        (begin
+            (set-car! __RESULT-BOX__ (op elem ...))
+            (car __RESULT-BOX__)))))
+
+(if-boxify
+  (begin
+  (define-syntax BOXIFY
+    (syntax-rules ()
+        ((_ op elem ...)
+            (begin
+                (set-car! __RESULT-BOX__ (op elem ...))
+                (car __RESULT-BOX__))))))
+  (begin
+    (define-syntax BOXIFY
+        (syntax-rules ()
+            ((_ op elem ...)
+                (op elem ...))))))
+
 (if-fixflo
 
 (begin)

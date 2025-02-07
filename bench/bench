@@ -550,6 +550,7 @@ while [ $# -gt 2 ] ; do
       -r) NB_RUNS=$1    ; shift ;;
       -c) clean=$1      ; shift ;;
       -i) forceiters=$1 ; shift ;;
+      -b) boxify=1      ; shift ;;
       -s) setting=$1    ; shift ;;
       -o) options=$1    ; shift ;;
       -p) prelude=$1    ; shift ;;
@@ -1015,6 +1016,7 @@ chicken-int) NAME='Chicken-int'
             PREFIXCODE="; %s %s"
             SUFFIXCODE="; %s %s"
             REPLCOMMANDS="(load \"%s.scm\")"
+            USE_DEF_SYNTAX=1
             case "$setting" in
               r6rs)
                 INSERTCODE="(define-syntax if-fixflo (syntax-rules () ((if-fixflo yes no) no)))"
@@ -1147,6 +1149,18 @@ petite-chez) NAME='Petite-Chez-Scheme'
    if [ -n "$forceiters" ] ; then iterfile="$forceiters" ; fi
 
    if [ -n "$prelude" ] ; then INSERTCODE="$INSERTCODE\n$prelude" ; fi
+
+   if [ -n "$USE_DEF_SYNTAX" ] ; then
+    yes_boxify="(define-syntax if-boxify (syntax-rules () ((if-boxify yes no) yes)))"
+    no_boxify="(define-syntax if-boxify (syntax-rules () ((if-boxify yes no) no)))"
+   else
+    yes_boxify="(define-macro (if-boxify yes no) yes)"
+    no_boxify="(define-macro (if-boxify yes no) no)"
+   fi
+
+   if [ -n "$boxify" ] ; then INSERTCODE="$INSERTCODE\n$yes_boxify" ;
+   else INSERTCODE="$INSERTCODE\n$no_boxify" ;
+   fi
 
    if [ -n "$postlude" ] ; then SUFFIXCODE="$SUFFIXCODE\n$postlude" ; fi
 
