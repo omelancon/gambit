@@ -25,7 +25,7 @@
     (exit 1))
 
 (define (call-with-output-file/truncate filename proc)
- (call-with-output-file filename proc))
+ (call-with-output-file filename proc 'truncate))
 
 (define (unknown r x)
     (call-with-values
@@ -75,8 +75,7 @@
 
 (define-syntax FLOATvector-const
 (syntax-rules ()
-    ((_ elem ...)
-    (vector elem ...))))
+  ((FLOATvector-const x ...) '#(x ...))))
 
 (define-syntax FLOATvector?
 (syntax-rules ()
@@ -117,6 +116,10 @@
 (syntax-rules ()
     ((_ elem ...)
     (vector elem ...))))
+
+(define-syntax nuc-const
+(syntax-rules ()
+  ((FLOATnuc-const x ...) '#(x ...))))
 
 ;; float-and-generic-macros.scm
 ;; Define macros for floating-point and generic arithmetic operations using `define-syntax`
