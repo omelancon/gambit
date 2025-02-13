@@ -158,7 +158,8 @@ make_src_code ()
      ".scm")
        printf "$PREFIXCODE\n" "$1" "$1" > $1-prefix.scm
        printf "$SUFFIXCODE\n" "$1" "$1" > $1-suffix.scm
-       cat $1-prefix.scm ../../prefix/prefix-${system}.scm | sed "s/;INSERTCODE/$INSERTCODE/" | cat - ../../num-iters/${iterfile} ../../src/$1.scm ../../suffix/suffix-${system}.scm $1-suffix.scm > $1.scm ;;
+       printf "$MIDFIXCODE\n" "$1" "$1" > $1-midfix.scm
+       cat $1-prefix.scm ../../prefix/prefix-${system}.scm $1-midfix.scm | sed "s/;INSERTCODE/$INSERTCODE/" | cat - ../../num-iters/${iterfile} ../../src/$1.scm ../../suffix/suffix-${system}.scm $1-suffix.scm > $1.scm ;;
      ".ss")
        printf "$PREFIXCODE\n" "$1" "$1" > $1-prefix.scm
        printf "$SUFFIXCODE\n" "$1" "$1" > $1-suffix.scm
@@ -554,6 +555,7 @@ while [ $# -gt 2 ] ; do
       -s) setting=$1    ; shift ;;
       -o) options=$1    ; shift ;;
       -p) prelude=$1    ; shift ;;
+      -m) midlude=$1    ; shift ;;
       -q) postlude=$1   ; shift ;;
        *) error ">>> Unknown argument of $arg given." ;;
    esac
@@ -1159,8 +1161,10 @@ petite-chez) NAME='Petite-Chez-Scheme'
    fi
 
    if [ -n "$boxify" ] ; then INSERTCODE="$INSERTCODE\n$yes_boxify" ;
-   else INSERTCODE="$INSERTCODE\n$no_boxify" ;
+    else INSERTCODE="$INSERTCODE\n$no_boxify" ;
    fi
+
+   if [ -n "$midlude" ] ; then MIDFIXCODE="$MIDFIXCODE\n$midlude" ; fi
 
    if [ -n "$postlude" ] ; then SUFFIXCODE="$SUFFIXCODE\n$postlude" ; fi
 

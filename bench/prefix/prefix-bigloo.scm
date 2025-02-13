@@ -70,8 +70,9 @@
   `(define-macro ,form (let () ,@body)))
 
 (define __RESULT-BOX__ (cons #f '()))
-(define (boxify-tail size default)
-  (let ((filler (make-list size default)))
+(define (boxify-tail size . rest)
+  (let* ((default (if (null? rest) #f (car rest)))
+        (filler (make-list size default)))
     (set-cdr! __RESULT-BOX__ filler)
     filler))
 
