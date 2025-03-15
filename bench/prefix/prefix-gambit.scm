@@ -148,7 +148,7 @@
 
 ; Don't specialize fixnum and flonum arithmetic.
 
-(def-macro (FLOATvector-const . lst)   `',(BOXIFY list->vector lst))
+(def-macro (FLOATvector-const . lst)   `',(list->vector lst))
 (def-macro (FLOATvector? x)            `(BOXIFY vector? ,x))
 (def-macro (FLOATvector . lst)         `(BOXIFY vector ,@lst))
 (def-macro (FLOATmake-vector n . init) `(BOXIFY make-vector ,n ,@init))

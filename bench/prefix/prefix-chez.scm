@@ -113,11 +113,6 @@
     ((_ v)
     (vector-length v))))
 
-(define-syntax FLOATvector-const
-(syntax-rules ()
-    ((_ elem ...)
-    (vector elem ...))))
-
 (define-syntax nuc-const
 (syntax-rules ()
   ((FLOATnuc-const x ...) '#(x ...))))
