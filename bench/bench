@@ -380,9 +380,9 @@ chez_exec ()
 {
   if command -v perf
   then
-    perf stat chezscheme -q $COMPOPTS $1.scm
+    perf stat scheme -q $COMPOPTS $1.scm
   else
-    /usr/bin/time chezscheme -q $COMPOPTS $1.scm
+    /usr/bin/time scheme -q $COMPOPTS $1.scm
   fi
 }
 
