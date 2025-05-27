@@ -1,6 +1,6 @@
 /* File: "c_intf.c" */
 
-/* Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved. */
+/* Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved. */
 
 /*
  * This module implements the conversion functions for the C
@@ -8,7 +8,7 @@
  */
 
 #define ___INCLUDED_FROM_C_INTF
-#define ___VERSION 409005
+#define ___VERSION 409006
 #include "gambit.h"
 
 #include "os_base.h"
@@ -1694,14 +1694,14 @@ ___SCMOBJ obj;)
     return ___FIX(___UNKNOWN_ERR);
 
   release_fn = ___CAST(___SCMOBJ (*) ___P((void *ptr),()),
-                       ___FIELD(obj,___FOREIGN_RELEASE_FN));
+                       ___FOREIGN_RELEASE_FN_FIELD(obj));
 
   if (release_fn != 0)
     {
-      ptr = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
-      ___FIELD(obj,___FOREIGN_RELEASE_FN) =
+      ptr = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
+      ___FOREIGN_RELEASE_FN_FIELD(obj) =
         ___CAST(___SCMOBJ,___CAST(___SCMOBJ (*) ___P((void *ptr),()),0));
-      ___FIELD(obj,___FOREIGN_PTR) =
+      ___FOREIGN_PTR_FIELD(obj) =
         ___CAST(___SCMOBJ,___CAST(void*,0));
       if ((e = release_fn (ptr)) != ___FIX(___NO_ERR))
         return e;
@@ -2176,6 +2176,7 @@ int arg_num;)
     return ___FIX(___STOC_F64_ERR+arg_num);
 
   *x = ___F64UNBOX(obj);
+
   return ___FIX(___NO_ERR);
 }
 
@@ -2847,10 +2848,10 @@ int arg_num;)
     }
 
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
+      !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_POINTER_ERR+arg_num);
 
-  *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
+  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -3007,10 +3008,10 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
+      !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_STRUCT_ERR+arg_num);
 
-  *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
+  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -3037,10 +3038,10 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
+      !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_UNION_ERR+arg_num);
 
-  *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
+  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -3067,10 +3068,10 @@ int arg_num;)
   ___SCMOBJ ___temp;
 
   if (!___TESTSUBTYPE(obj,___sFOREIGN) ||
-      !can_convert_foreign_type (___FIELD(obj,___FOREIGN_TAGS), tags))
+      !can_convert_foreign_type (___FOREIGN_TAGS_FIELD(obj), tags))
     return ___FIX(___STOC_TYPE_ERR+arg_num);
 
-  *x = ___CAST(void*,___FIELD(obj,___FOREIGN_PTR));
+  *x = ___CAST(void*,___FOREIGN_PTR_FIELD(obj));
   return ___FIX(___NO_ERR);
 }
 
@@ -4363,7 +4364,7 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
-  if (___S64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB_FIXNUM))
+  if (___S64_fits_in_width (x, ___FIX_WIDTH))
     r = ___FIX(___S64_to_LONGLONG (x));
   else
     {
@@ -4427,7 +4428,7 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
-  if (___U64_fits_in_width (x, ___SCMOBJ_WIDTH-___TB_FIXNUM-1))
+  if (___U64_fits_in_width (x, ___FIX_WIDTH-1))
     r = ___FIX(___U64_to_ULONGLONG (x));
   else
     {
@@ -4639,6 +4640,12 @@ int arg_num;)
 {
   ___SCMOBJ r;
 
+#ifdef ___NAN_BOXING
+
+  r = ___F64BOX(x);
+
+#else
+
 #if ___FLONUM_SELF_TAGGING_TAGS > 0
 
   ___U64 u64_x = ___F64_TO_U64(x);
@@ -4663,6 +4670,8 @@ int arg_num;)
 
       ___MEM_ALLOCATED_FLONUM_SET(r, x);
     }
+
+#endif
 
   *obj = r;
   return ___FIX(___NO_ERR);
@@ -5174,9 +5183,9 @@ int arg_num;)
           *obj = ___FAL;
           return ___FIX(___CTOS_HEAP_OVERFLOW_ERR+arg_num);
         }
-      ___FIELD(r,___FOREIGN_TAGS) = tags;
-      ___FIELD(r,___FOREIGN_RELEASE_FN) = ___CAST(___SCMOBJ,release_fn);
-      ___FIELD(r,___FOREIGN_PTR) = ___CAST(___SCMOBJ,x);
+      ___FOREIGN_TAGS_FIELD(r) = tags;
+      ___FOREIGN_RELEASE_FN_FIELD(r) = ___CAST(___SCMOBJ,release_fn);
+      ___FOREIGN_PTR_FIELD(r) = ___CAST(___SCMOBJ,x);
       *obj = r;
     }
   return ___FIX(___NO_ERR);

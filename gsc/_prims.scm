@@ -2,7 +2,7 @@
 
 ;;; File: "_prims.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -297,6 +297,7 @@
 
 ("fixnum?"                            (1)   #f 0     0    boolean r6rs)
 ("##fixnum?"                          (1)   #f ()    0    boolean extended)
+("##fixnums?"                         0     #f ()    0    boolean extended)
 ("fx*"                                0     #f 0     0    fixnum  r6rs)
 ("##fx*"                              0     #f ()    0    fixnum  extended)
 ("##fx*?"                             (2)   #f ()    0    #f      extended)
@@ -491,6 +492,7 @@
 ("##flodd?"                           (1)   #f ()    0    boolean extended)
 ("flonum?"                            (1)   #f 0     0    boolean r6rs)
 ("##flonum?"                          (1)   #f ()    0    boolean extended)
+("##flonums?"                         0     #f ()    0    boolean extended)
 ("flpositive?"                        (1)   #f 0     0    boolean r6rs)
 ("##flpositive?"                      (1)   #f ()    0    boolean extended)
 ("flround"                            (1)   #f 0     0    flonum  r6rs)
@@ -1411,6 +1413,11 @@
 ("##gc-hash-table-find!"              (3)   #t ()    0    fixnum  extended)
 ("##gc-hash-table-rehash!"            (2)   #t ()    0    (#f)    extended)
 
+("##gc-hash-table-make"               (5)   #f ()    0    (#f)    extended)
+("##gc-hash-table-length"             (1)   #f ()    0    fixnum  extended)
+("##gc-hash-table-field-ref"          (2)   #f ()    0    (#f)    extended)
+("##gc-hash-table-field-set!"         (3)   #t ()    0    (#f)    extended)
+
 ;; will
 
 ("make-will"                          (2)   #t (2)   0    #f      gambit)
@@ -1682,7 +1689,7 @@
 
 ("##object-before?"                   (2)   #t ()    0    boolean extended)
 
-("##first-argument"                   1     #f ()    0    (#f)    extended)
+("##first-argument"                   1     #t ()    0    (#f)    extended)
 ("##check-heap-limit"                 (0)   #t ()    0    (#f)    extended)
 
 ("##poll-point"                       (0)   #t ()    0    (#f)    extended)
@@ -2602,11 +2609,7 @@
          (and check-prims
               (gen-var-type-checks source env
                 vars
-                (map
-                 (lambda (check-prim)
-                   (lambda (var)
-                     (gen-call-prim-vars-notsafe source env check-prim (list var))))
-                 check-prims)
+                check-prims
                 tail))))
     (if (or type-checks
             check-run-time-binding)
@@ -3297,8 +3300,6 @@
   (define exact?-sym      (string->canonical-symbol "exact?"))
   (define inexact?-sym    (string->canonical-symbol "inexact?"))
 
-  (define **fixnum?-sym (string->canonical-symbol "##fixnum?"))
-
   (define **fx=-sym (string->canonical-symbol "##fx="))
   (define **fx<-sym (string->canonical-symbol "##fx<"))
   (define **fx>-sym (string->canonical-symbol "##fx>"))
@@ -3377,8 +3378,6 @@
     (string->canonical-symbol "##fxarithmetic-shift-right?"))
   (define **fxwraplogical-shift-right?-sym
     (string->canonical-symbol "##fxwraplogical-shift-right?"))
-
-  (define **flonum?-sym (string->canonical-symbol "##flonum?"))
 
   (define **fl=-sym (string->canonical-symbol "##fl="))
   (define **fl<-sym (string->canonical-symbol "##fl<"))
@@ -4734,8 +4733,6 @@
 
 (define (setup-vector-primitives)
 
-  (define **fixnum?-sym     (string->canonical-symbol "##fixnum?"))
-  (define **flonum?-sym     (string->canonical-symbol "##flonum?"))
   (define **char?-sym       (string->canonical-symbol "##char?"))
   (define **fx<-sym         (string->canonical-symbol "##fx<"))
   (define **fx<=-sym        (string->canonical-symbol "##fx<="))
@@ -5845,12 +5842,6 @@
 (define (not-bigfix? obj)
   (not (and (targ-fixnum64? obj) (not (targ-fixnum32? obj))))) ;; TODO: remove dependency on C back-end
 
-(define (mem-alloc? obj)
-  (let ((type (targ-obj-type obj))) ;; TODO: remove dependency on C back-end
-    (or (eq? type 'pair)
-        (and (eq? type 'subtyped)
-             (not-bigfix? obj)))))
-
 (define (any obj) #t)
 
 (define (alist? obj) (and (list? obj) (every? pair? obj)))
@@ -5870,18 +5861,6 @@
 (def-simp "eqv?"             (constant-folder eqv?           ))
 (def-simp "eq?"              (constant-folder eq?            ))
 (def-simp "equal?"           (constant-folder equal?         ))
-(def-simp "##mem-allocated?" (constant-folder (lambda (obj)
-                                                      (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
-                                                        ((subtyped pair) #t)
-                                                        (else            #f)))
-                                                    not-bigfix?))
-(def-simp "##subtyped?"      (constant-folder (lambda (obj)
-                                                      (case (targ-obj-type obj) ;; TODO: remove dependency on C back-end
-                                                        ((subtyped) #t)
-                                                        (else       #f)))
-                                                    not-bigfix?))
-(def-simp "##subtype"        (constant-folder targ-obj-subtype-integer ;; TODO: remove dependency on C back-end
-                                                    mem-alloc?))
 (def-simp "pair?"            (constant-folder pair?          ))
 ;(def-simp "cons"             (constant-folder cons           ))  ;; this would not preserve mutability and eq?-ness
 (def-simp "car"              (constant-folder car            pair?))

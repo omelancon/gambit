@@ -2,8 +2,8 @@
 
 ;;; File: "_num.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
-;;; Copyright (c) 2004-2023 by Brad Lucier, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 2004-2025 by Brad Lucier, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1551,9 +1551,9 @@
                        (inexactify quo rem require-inexact?)
                        (inexactify (fx+ quo 1) (fx- rem y) require-inexact?)))
                   ((3) ;; round
-                   (let ((abs-y/2 (fxabs (if (fxpositive? y)
-                                             (fxarithmetic-shift-right y 1)
-                                             (fxarithmetic-shift-right (fx+ y 1) 1)))))
+                   (let ((abs-y/2 (if (fxnegative? y)
+                                      (fxabs (fxarithmetic-shift-right (fx+ y 1) 1))
+                                      (fxarithmetic-shift-right y 1))))
                      (cond ((and (fxeven? y)
                                  (fxodd? quo)
                                  (fx= (fxabs rem) abs-y/2))
@@ -1578,8 +1578,12 @@
                            (inexactify (fx- quo 1) (fx+ rem y) require-inexact?))
                        (inexactify quo rem require-inexact?)))
                   (else ;; balanced
-                   (let ((abs-y/2 (fxabs (fxarithmetic-shift-right y 1))))
-                     (cond ((fx<= abs-y/2 rem)
+                   (let ((abs-y/2 (if (fxnegative? y)
+                                      (fxabs (fxarithmetic-shift-right (fx+ y 1) 1))
+                                      (fxarithmetic-shift-right y 1))))
+                     (cond ((if (fxeven? y)
+                                (fx<= abs-y/2 rem)
+                                (fx<  abs-y/2 rem))
                             (if (fxnegative? y)               ;; avoid (abs ##min-fixnum)
                                 (inexactify (fx- quo 1) (fx+ rem y) require-inexact?)
                                 (inexactify (fx+ quo 1) (fx- rem y) require-inexact?)))
@@ -1633,9 +1637,7 @@
                    (inexactify quo rem require-inexact?)
                    (inexactify (inc-quotient quo) (dec-remainder rem y) require-inexact?)))
               ((3) ;; round
-               (let ((abs-y/2 (abs (if (positive? y)
-                                       (arithmetic-shift y -1)
-                                       (arithmetic-shift (+ y 1) -1)))))
+               (let ((abs-y/2 (arithmetic-shift (abs y) -1)))
                  (cond ((and (even? y)
                              (odd? quo)
                              (= (abs rem) abs-y/2))
@@ -1660,8 +1662,10 @@
                        (inexactify (dec-quotient quo) (inc-remainder rem y) require-inexact?))
                    (inexactify quo rem require-inexact?)))
               (else ;; balanced
-               (let ((abs-y/2 (abs (arithmetic-shift y -1))))
-                 (cond ((<= abs-y/2 rem)
+               (let ((abs-y/2 (arithmetic-shift (abs y) -1)))
+                 (cond ((if (even? y)
+                            (<= abs-y/2 rem)
+                            (<  abs-y/2 rem))
                         (if (negative? y)
                             (inexactify (dec-quotient quo) (inc-remainder rem y) require-inexact?)
                             (inexactify (inc-quotient quo) (dec-remainder rem y) require-inexact?)))
@@ -2401,7 +2405,7 @@
                                    (bignums-case exact-x #t exact-y #t))))))))
                 (type-error-on-x))
             (type-error-on-x))               ;; x = cpxnum
-          (type-error-on-y)) 
+          (type-error-on-y))
 
     (type-error-on-y)))                              ;; y = cpxnum
 
@@ -3701,6 +3705,8 @@ for a discussion of branch cuts.
 
   (define (exact-int-expt x y)
 
+    ;; x is exact, y is an exact int
+
     (define (positive-int-expt x y)
 
       ;; x is an exact number and y is a positive exact integer
@@ -3749,8 +3755,50 @@ for a discussion of branch cuts.
          (##exp (##* (##log x) y)))
      (range-error)))
 
+  (define (flonum-exact-int-expt x y)
+    ;; x is a flonum, y is a nonzero exact-int
+    (cond
+     ;; The fast path
+     ((##exact-int->flonum-exact? y)
+      (flexpt x (inexact y)))
+     ;; singular cases
+     ((flnan? x)         x)
+     ((flzero? x)        (if (odd? y) x 0.))
+     ((fl= (flabs x) 1.) (if (odd? y) x 1.))
+     ;; extremely large exponents
+     ((or (<= y (- (expt 2 63)))
+          (<= (expt 2 63) y))
+      ;; Only extreme values (+/- 0, infty) are possible
+      ;; in IEEE double precision.
+      ;; for future reference
+      ;; (nextafter 1. +inf.0) => 1.0000000000000002
+      ;; (nextafter 1. +.0   ) =>  .9999999999999999
+      (if (eq? (fl< 1. (flabs x)) (positive? y))
+          ;; result is an infinity
+          (if (and (odd? y) (flnegative? x)) -inf.0 +inf.0)
+          ;; result is a zero
+          (if (and (odd? y) (flnegative? x)) -0. +0.)))
+     (else
+      (let* ((abs-big-y
+              ;; remove the lowest 12 bits of (abs y)
+              (arithmetic-shift (arithmetic-shift (abs y) -12) 12))
+             (big-part-of-y
+              (if (negative? y)
+                  (- abs-big-y)
+                  abs-big-y))
+             (rest-of-y
+              (- y big-part-of-y)))
+        ;; y = big-part-of-y + rest-of-y, both terms on right are nonzero
+        ;; because (abs y) <= 2^63 and it can't be converted exactly to a flonum,
+        ;; so there are more than 53 upper bits of y.
+        ;; big-part-of-y and rest-of-y can be converted to flonum without roundoff error.
+        ;; y, big-part-of-y, and rest-of-y have the same sign, so the following
+        ;; product is not an infinity times a zero.
+        (fl* (flexpt x (inexact big-part-of-y))
+             (flexpt x (inexact rest-of-y)))))))
+
   (define (ratnum-expt x y)
-    ;; x is exact-int or ratnum
+    ;; x is exact, y is ratnum
     (cond ((##eqv? x 0)
            (if (##negative? y)
                (range-error)
@@ -3849,20 +3897,9 @@ for a discussion of branch cuts.
       (if (##fx= y 0)
           1
           (exact-int-expt x y))
-      (cond ((##fx= y 0)
-             1)
-            ((##flnan? x)
-             x)
-            ((##flnegative? x)
-             ;; we do this because (##fixnum->flonum y) is always
-             ;; even for large enough y on 64-bit machines
-             (let ((abs-result
-                    (##flexpt (##fl- x) (##fixnum->flonum y))))
-               (if (##fxodd? y)
-                   (##fl- abs-result)
-                   abs-result)))
-            (else
-             (##flexpt x (##fixnum->flonum y))))
+      (if (##fx= y 0)
+          1
+          (flonum-exact-int-expt x y))
       (cond ((##fx= y 0)
              1)
             ((##fx= y 1)
@@ -3876,18 +3913,7 @@ for a discussion of branch cuts.
       (exact-int-expt x y)
       (exact-int-expt x y)
       (exact-int-expt x y)
-      (cond ((##flnan? x)
-             x)
-            ((##flnegative? x)
-             ;; we do this because (##exact-int->flonum y) is always
-             ;; even for large enough y
-             (let ((abs-result
-                    (##flexpt (##fl- x) (##exact-int->flonum y))))
-               (if (macro-bignum-odd? y)
-                   (##fl- abs-result)
-                   abs-result)))
-            (else
-             (##flexpt x (##exact-int->flonum y))))
+      (flonum-exact-int-expt x y)
       (if (##exact? x)
           (exact-int-expt x y)
           (complex-expt x y)))
@@ -3914,7 +3940,9 @@ for a discussion of branch cuts.
       (ratnum-complex-expt x y))
 
     (macro-number-dispatch x (type-error-on-x) ;; y a flonum
-      (cond ((##flnan? y)
+      (cond ((##eqv? x 1)
+             1)
+            ((##flnan? y)
              y)
             ((##eqv? x 0)
              (if (##flnegative? y)
@@ -10835,7 +10863,7 @@ end-of-code
             (do ((i 0 (##fx+ i 2))
                  (j 0 (##fx+ j stride)))
                 ((##fx= j lut-size) result)
-              (##f64vector-set! result             i    (##f64vector-ref lut             j   ))
+              (##f64vector-set! result i           (##f64vector-ref lut j))
               (##f64vector-set! result (##fx+ i 1) (##f64vector-ref lut (##fx+ j 1))))))
 
         (define (extend-lut multiplier-lut start)
@@ -10857,9 +10885,9 @@ end-of-code
                           (let* ((real  (##f64vector-ref result k))
                                  (imag  (##f64vector-ref result (##fx+ k 1)))
                                  (result-real (##fl- (##fl* multiplier-real real)
-                                                          (##fl* multiplier-imag imag)))
+                                                     (##fl* multiplier-imag imag)))
                                  (result-imag (##fl+ (##fl* multiplier-real imag)
-                                                          (##fl* multiplier-imag real))))
+                                                     (##fl* multiplier-imag real))))
                             (##f64vector-set! result i result-real)
                             (##f64vector-set! result (##fx+ i 1) result-imag)
                             (inner (##fx+ i 2)

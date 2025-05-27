@@ -2,7 +2,7 @@
 
 ;;; File: "_parms.scm"
 
-;;; Copyright (c) 1994-2021 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (include "fixnum.scm")
 
@@ -98,6 +98,10 @@
 (define **raise-sym            (string->canonical-symbol "##raise"))
 (define **r7rs-with-exception-catcher-sym (string->canonical-symbol "##r7rs-with-exception-catcher"))
 (define **r7rs-reraise-sym     (string->canonical-symbol "##r7rs-reraise"))
+(define **fixnum?-sym          (string->canonical-symbol "##fixnum?"))
+(define **fixnums?-sym         (string->canonical-symbol "##fixnums?"))
+(define **flonum?-sym          (string->canonical-symbol "##flonum?"))
+(define **flonums?-sym         (string->canonical-symbol "##flonums?"))
 
 (define ieee-scheme-sym        (string->canonical-symbol "ieee-scheme"))
 (define r4rs-scheme-sym        (string->canonical-symbol "r4rs-scheme"))
@@ -569,7 +573,7 @@
 
 ;; Gambit system version numbers.
 
-(define (compiler-version) 409005) ;; 100000*major + 1000*minor + revision
+(define (compiler-version) 409006) ;; 100000*major + 1000*minor + revision
 
 (define compiler-version-string-prefix "v")
 (define compiler-version-string-suffix "")

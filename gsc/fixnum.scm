@@ -2,7 +2,7 @@
 
 ;;; File: "fixnum.scm"
 
-;;; Copyright (c) 1994-2024 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 (##declare
   (standard-bindings)
@@ -84,6 +84,9 @@ open-output-file-preserving-case
 optional-object
 optional-object?
 pp-expression
+write-returning-len
+write-returning-len-without-read-macros
+display-returning-len
 rest-object
 rest-object?
 s16vect->list
@@ -287,8 +290,12 @@ string->canonical-symbol
 **quasiquote-sym
 **quote-sym
 **r7rs-guard-sym
-**r7rs-reraise-sym
 **r7rs-with-exception-catcher-sym
+**r7rs-reraise-sym
+**fixnum?-sym
+**fixnums?-sym
+**flonum?-sym
+**flonums?-sym
 **raise-sym
 **set!-sym
 **set-box!-sym
@@ -644,6 +651,7 @@ normalize-program
 parse-tree->expression
 pt-c-lambda
 scheme-id->c-id
+side-effects-impossible?
 string->c-id
 ))
 
@@ -821,6 +829,10 @@ virtual.end!
 **not-proc-obj
 **quasi-cons-proc-obj
 **quasi-list-proc-obj
+**fixnum?-proc-obj
+**fixnums?-proc-obj
+**flonum?-proc-obj
+**flonums?-proc-obj
 allocation-limit
 arith-implementation
 default-target

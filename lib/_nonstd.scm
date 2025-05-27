@@ -2,7 +2,7 @@
 
 ;;; File: "_nonstd.scm"
 
-;;; Copyright (c) 1994-2023 by Marc Feeley, All Rights Reserved.
+;;; Copyright (c) 1994-2025 by Marc Feeley, All Rights Reserved.
 
 ;;;============================================================================
 
@@ -1863,77 +1863,58 @@
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(##define-macro (macro-will-size) 3)
-
-(define-prim (##will? obj)
-  (and (##subtyped? obj)
-       (##eq? (##subtype obj) (macro-subtype-weak))
-       (##fx= (##vector-length obj) (macro-will-size))))
+(define-prim (##will? obj))
 
 (define-prim (will? x)
   (macro-force-vars (x)
     (##will? x)))
 
-(define-prim (##make-will testator action)
-  (macro-make-will testator action))
+(define-prim (##make-will testator action))
 
 (define-prim (make-will testator action)
   (macro-force-vars (action)
     (macro-check-procedure action 2 (make-will testator action)
-      (macro-make-will testator action))))
+      (##make-will testator action))))
 
-(define-prim (##will-testator will)
-  (macro-will-testator will))
+(define-prim (##will-testator will))
 
 (define-prim (will-testator will)
   (macro-force-vars (will)
     (macro-check-will will 1 (will-testator will)
-      (macro-will-testator will))))
+      (##will-testator will))))
 
-(define-prim (##will-testator-set! will testator)
-  (macro-will-testator-set! will testator))
+(define-prim (##will-testator-set! will testator))
 
-(define-prim (##will-action will)
-  (macro-will-action will))
+(define-prim (##will-action will))
 
-(define-prim (##will-action-set! will action)
-  (macro-will-action-set! will action))
-
-(define-prim (##will-execute! will)
-  (macro-will-execute! will))
+(define-prim (##will-action-set! will action))
 
 (define-prim (will-execute! will)
   (macro-force-vars (will)
     (macro-check-will will 1 (will-execute! will)
-      (macro-will-execute! will))))
+      (##will-execute! will))))
 
 ;;; - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-(define-prim (##box? obj)
-  (and (##subtyped? obj)
-       (##eq? (##subtype obj) (macro-subtype-boxvalues))
-       (##fx= (##vector-length obj) 1)))
+(define-prim (##box? obj))
 
 (define-prim (box? obj)
   (macro-force-vars (obj)
     (##box? obj)))
 
-(define-prim (##box obj)
-  (##subtype-set! (##vector obj) (macro-subtype-boxvalues)))
+(define-prim (##box obj))
 
 (define-prim (box obj)
   (##box obj))
 
-(define-prim (##unbox box)
-  (##vector-ref box 0))
+(define-prim (##unbox box))
 
 (define-prim (unbox box)
   (macro-force-vars (box)
     (macro-check-box box 1 (unbox box)
       (##unbox box))))
 
-(define-prim (##set-box! box val)
-  (##vector-set! box 0 val))
+(define-prim (##set-box! box val))
 
 (define-prim (set-box! box val)
   (macro-force-vars (box)
